@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Peach xmlns="http://peachfuzzer.com/2012/Peach"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://peachfuzzer.com/2012/Peach peach.xsd"
+       author="WangHao"
+       description="Fuzz an HTTP server"
+       version="0.0.1">
+
+  <Include ns="HTTP" src="file:##PitLibraryPath##/_Common\Models\FILE\UploadFile\HTTP_Yaml_State.xml"/>
+
+  <Agent name="Local">
+    <!--Monitor-->
+    <Monitor class="Ssh">
+      <Param name="Host" value="10.90.126.84" />
+      <Param name="Username" value="root" />
+      <Param name="Password" value="Changeme_123" />
+      <Param name="Command" value="python java_monitor.py" />
+      <Param name="CheckValue" value="fault =" />
+      <Param name="When" value="OnIterationEnd" /> 
+      <Param name="FaultOnMatch" value="true" />
+    </Monitor>
+    <!--Monitor-->
+  </Agent>
+
+  <Test name="Default"  maxOutputSize="100000" >
+    
+    <!--Agent ref="Local" /-->
+    <Exclude xpath="//HTTP_Request_FirstLine_ref"/>
+	<Exclude xpath="//HTTP_Head_Para_ref"/>
+    <Exclude xpath="//state_A"/>
+    <Exclude xpath="//state_B"/>
+	<Include xpath="//fuzz_A//ALL_DataModel"/>
+	<Exclude xpath="//fuzz_B" />
+    <StateModel ref="HTTP:RequestToServer"/>
+    <!-- ssl -->
+	<Publisher class="Ssl" name="ssl">
+      <Param name="Host" value="##TargetIPv4##"/>
+      <Param name="Port" value="##TargetPort##"/>
+      <Param name="ClientCert" value="##Clientcert##" />
+      <Param name="ClientKey" value="##Clientkey##" />
+      <Param name="Timeout" value="##Timeout##"/>
+    </Publisher>
+    <!-- tcp -->
+    <Publisher class="TcpClient" name="tcp">
+      <Param name="Host" value="##TargetIPv4##"/>
+      <Param name="Port" value="##TargetPort##"/>
+      <Param name="Timeout" value="##Timeout##"/>
+    </Publisher> 
+    
+    <Strategy class="##Strategy##">
+		<Param name="MaxFieldsToMutate" value="6" />
+		<Param name="SwitchCount" value="100" />
+	</Strategy>
+    
+    <Mutators mode="include">
+
+    </Mutators>
+    
+    
+    <Logger class="File">
+      <Param name="Path" value="##LoggerPath##" />
+    </Logger>
+  </Test>
+</Peach>

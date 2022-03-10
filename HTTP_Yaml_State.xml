@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Peach xmlns="http://peachfuzzer.com/2012/Peach"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://peachfuzzer.com/2012/Peach peach.xsd"  
+       author="WangHao"
+	   description="http protocol pit state models" version="0.0.1">
+
+  <Include ns="HTTP" src="file:##PitLibraryPath##/_Common\Models\FILE\UploadFile\HTTP_Yaml_Data.xml"/>
+  <PythonPath path="##PitLibraryPath##/" />
+  <Import import="HTTP_analyzer" />
+  
+  <StateModel name="RequestToServer" initialState="InitialState">
+    <State name="InitialState">
+	  
+      <!-- pre -->
+      
+      <!-- pre -->
+      
+      <!-- fuzz -->
+	  <Action name="fuzz_A" type="output" publisher="##Publisher##">
+        <DataModel ref="HTTP:Post_Txt" />
+		 <Data fileName="##PitLibraryPath##/##BinPath##" />
+      </Action>
+	  
+	 <Action name="fuzz_B" type="input" publisher="##Publisher##">
+        <!-- <Godel name="check_javaError" post="HTTP_analyzer.HTTP_Check(self)"/>    -->
+        <DataModel ref="HTTP:Response" />
+      </Action> 
+      <!-- fuzz -->
+      
+      <!-- post -->
+      
+      <!-- post -->
+      
+    </State>
+  </StateModel>
+
+</Peach>
+

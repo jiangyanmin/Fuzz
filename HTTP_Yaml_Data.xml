@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Peach>
+  <PythonPath path="##PitLibraryPath##/_Common/Models/FILE/UploadFile/" />
+  <Import import="HTTP_Headers_Fixup" />
+  <Import import="string" />
+  
+
+	<!--<DataModel name="HTTP_URL_DataModel">
+        <String name="url" mutable="false">
+            <Analyzer class="StringToken">
+            <Param name="Tokens" value="/?=&amp;&quot;"/>
+          </Analyzer>
+        </String>
+    </DataModel> -->
+  <Defaults >
+    <String type="utf8" />
+  </Defaults>	
+	
+	<DataModel name="CRLF">
+		<String name="crlf" value="\r\n" mutable="false" token="true"/>
+	</DataModel> 
+	
+  <DataModel name="Semicolon">
+    <String value="; " token="true"/>
+  </DataModel>
+
+	<!--<DataModel name="HTTP_Request_FirstLine"> -->
+		<!-- 该数据模型定义的是：HTTP请求报文的第一行 -->
+		<!-- POST /rest/fastlogin/v1.0?app_key=4d2c042e3ea7a31e21005d62&username=13641408987&format=json&type=2 HTTP/1.1 -->
+		<!--<String name="Method" mutable="false"/>
+		<String value=" " mutable="false" token="true"/>
+		<Block name="HTTP_URL" mutable="false" ref="HTTP_URL_DataModel"/>		
+		<String name="version" value=" HTTP/1.1" mutable="false" token="true"/>	
+		<String name="crlf" value="\r\n" mutable="false" token="true"/>
+	</DataModel> -->
+	<DataModel name="Method">
+		<String name="method" value="POST" mutable="false" />
+    </DataModel>
+	
+	<DataModel name="URI">
+		<String name="uri" value="/" mutable="false" />
+	</DataModel>
+	
+	<DataModel name="Version">
+		<String name="http" value="HTTP/" token="true" mutable="false" />
+		<String name="major-version" value="1" mutable="false" />
+		<String name="period" value="." token="true" mutable="false" />
+		<String name="minor-version" value="1" mutable="false" />
+	</DataModel>
+	
+	<DataModel name="Header">
+		<String name="field-name" constraint="not value.startswith(&quot;\x0d\x0a&quot;)" mutable="false" />
+		<String name="delim" value=": " token="true" mutable="false" />
+		<String name="field-value" mutable="false" />
+		<String name="crlf" value="\r\n" token="true" mutable="false" />
+	</DataModel>
+	
+	<DataModel name="Boundary" >
+		<String name="boundary_key" value="boundary=" mutable="false" token="true"/>
+		<String name="boundary_value"  mutable="false" />
+	</DataModel>
+	
+  <DataModel name="Content-Disposition" >
+        <String value="Content-Disposition" token="true"  mutable="false"/>
+        <String value=": " token="true" mutable="false"/>
+        <String value="form-data" mutable="false"/>
+        <Block ref="Semicolon"/>
+        <Choice minOccurs="0" maxOccurs="-1">
+            <Block name="name" mutable="false">
+                <String value="name" token="true" mutable="false"/>
+                <String value="=" token="true" mutable="false"/>
+                <String value="&quot;" token="true" mutable="false"/>
+                <String value="file" mutable="false"/>
+                <String value="&quot;" token="true" mutable="false"/>
+				<String value="; " token="true" mutable="false"/>
+            </Block>
+            <Block name="filename" mutable="false">
+                <String value="filename" token="true" mutable="false"/>
+                <String value="=" token="true" mutable="false"/>
+                <String value="&quot;" token="true" mutable="false"/>
+                <String  mutable="false"/>
+                <String value="&quot;" token="true" mutable="false"/>
+            </Block>
+            <!-- <Block ref="Semicolon" mutable="false"/> -->
+        </Choice>
+        <Block ref="CRLF"/>
+  </DataModel> 
+        
+  <DataModel name="TxtFile">
+    <Choice name="fileLines" minOccurs="2" >
+		<Block name="fileLine" >
+			<String constraint="not value.startswith(&quot;------&quot;)"/>
+			<String value="\r\n" token="true"/>
+		</Block>
+		
+	</Choice>
+  </DataModel> 
+		
+	<DataModel name="HTTP_Response_FirstLine">
+		<!-- 该数据模型定义的是：HTTP响应报文的第一行 -->
+		<!-- HTTP/1.1 200 OK. -->
+        <Choice>
+            <Block name="ok200">
+                <String name="version" value="HTTP/1.1 " length="9" mutable="false" token="true"/>
+                <String name="responseNO" length="3"/>
+                <String name="h1" value=" " mutable="false" token="true"/>
+                <String name="respStr" mutable="false"/>
+                <String name="crlf" value="\r\n" mutable="false" token="true"/>	
+            </Block>
+            <Block name="other">
+                <String  />
+                <String name="h1" value=" " mutable="false" token="true"/>
+                <String name="respStr" mutable="false"/>
+                <String name="crlf" value="\r\n" mutable="false" token="true"/>	
+            </Block>
+        </Choice>
+	</DataModel>
+	
+	<DataModel name="headParaFlag_Str">
+		<String name="Colon_Space" mutable="false" value=":" token="true"/>
+		<Block name="blank_array" mutable="false" minOccurs="0" maxOccurs="1">
+			<String name="blank_Str" mutable="false" value=" " token="true"/>
+		</Block>
+	</DataModel>	
+	
+	<DataModel name="headLine_Base">
+		<String name="head_ParaName" mutable="false" token="true" constraint="not value.startswith(&quot;\x0d\x0a&quot;)"/>
+		<Block name="headParaFlag" mutable="false" ref="headParaFlag_Str"/>
+		<String name="head_ParaValue" mutable="false"/>
+	</DataModel>
+	
+	<!--<DataModel name="HTTPHeader_Host">-->
+		<!--Host不能继承headLine_Base, 因为host_value 名称在state中需要引用-->
+		<!--<String name="head_ParaName" mutable="false" constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'host'"/>
+		<Block name="headParaFlag" mutable="false" ref="headParaFlag_Str"/>
+		<String name="host_value" mutable="false"/>	
+	</DataModel> -->
+
+
+	<!--<DataModel name="HTTPHeader_ContentLength" ref="headLine_Base">
+		<String name="head_ParaName" mutable="false" constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'content-length'"/>
+		<String name="head_ParaValue" mutable="false">	
+			<Relation type="size" of="body"/>
+		</String>			
+	</DataModel> -->
+
+	<!-- add new http head para-->
+
+	<DataModel name="HTTPHeader_OtherPara" ref="headLine_Base">
+		<String name="head_ParaName" mutable="false" constraint="not value.startswith(&quot;\x0d\x0a&quot;)"/>
+	</DataModel>
+	
+    <DataModel name="Cookie" >		
+		<String name="head_ParaName" mutable="false" constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'cookie'"/>
+        <Block name="headParaFlag" mutable="false" ref="headParaFlag_Str"/>
+        <String name="Cookie_Value" mutable="false" />
+	</DataModel>
+    
+    <DataModel name="Header_modify1" >		
+		<String name="head_ParaName" mutable="false" constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'set-cookie'"/>
+        <Block name="headParaFlag" mutable="false" ref="headParaFlag_Str"/>
+        <String name="modify1" mutable="false" />
+	</DataModel>
+    
+    <DataModel name="Header_modify2" >		
+		<String name="head_ParaName" mutable="false" constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'wait_change2'"/>
+        <Block name="headParaFlag" mutable="false" ref="headParaFlag_Str"/>
+        <String name="modify2" mutable="false" />
+	</DataModel>
+    
+	<!--<DataModel name="HTTP_Headers">
+		<Block name="header_array" mutable="false" minOccurs="1" maxOccurs="-1">
+			<Choice name="header_choice" mutable="false">
+				
+				<Block name="Header_ContentLength" mutable="false" ref="HTTPHeader_ContentLength"/>
+				<Block name="Header_modify1" mutable="false" ref="Header_modify1"/>				
+                <Block name="Header_modify2" mutable="false" ref="Header_modify2"/>				
+                <Block name="Header_Cookie" mutable="false" ref="Cookie"/>			
+				<Block name="Header_Host" mutable="false" ref="HTTPHeader_Host"/>							
+				<Block name="Header_OtherPara" mutable="false" ref="HTTPHeader_OtherPara"/>
+			</Choice>
+			<String name="crlf" value="\r\n" mutable="false" token="true"/>
+		</Block>
+	</DataModel>  -->
+    
+	<DataModel name="HTTP_Headers_res">
+		<Block name="header_array" mutable="false" minOccurs="1" maxOccurs="-1">
+			<Choice name="header_choice" mutable="false">
+				<Block name="Header_modify1" mutable="false" ref="Header_modify1"/>				
+				<Block name="Header_modify2" mutable="false" ref="Header_modify2"/>		
+								
+				<Block name="Header_OtherPara" mutable="false" ref="HTTPHeader_OtherPara"/>
+			</Choice>
+			<String name="crlf" value="\r\n" mutable="false" token="true"/>
+		</Block>
+	</DataModel> 
+	
+	<!--<DataModel name="ALL_DataModel">
+			
+		<Block name="file_header1" ref="FileBody_header" />
+		<Block name="File" ref="TxtFile"/>
+		
+		<Block name="file_header_end" ref="FileBody_header_end" />
+	</DataModel> -->
+  
+    <!--<DataModel name="Null_DataModel">	
+      <Blob name="httpBody_Block" value="" length="0" mutable="false"/>	
+	</DataModel>   --> 
+	
+	<!--<DataModel name="Request">
+		<Block name="HTTP_Request_FirstLine_ref" mutable="false" ref="HTTP_Request_FirstLine"/>
+		<Block name="HTTP_Head_Para_ref" mutable="false" ref="HTTP_Headers"/>
+		<String name="crlf" value="\r\n" mutable="false" token="true"/>
+        <Choice name="body">
+            <Block name="ALL_DataModel" ref="ALL_DataModel"/>
+            <Block name="Null_DataModel" ref="Null_DataModel"/>
+        </Choice>
+	</DataModel> -->
+
+	<DataModel name="RequestLine">
+		<Block name="method" ref="Method" mutable="false" />
+		<String value=" " token="true" mutable="false" />
+		<Block name="uri" ref="URI" mutable="false" />
+		<String value=" " token="true" mutable="false" />
+		<Block name="version" ref="Version" mutable="false" />
+	</DataModel>	
+	
+	<DataModel name="HostHeader" ref="Header">
+		<String name="field-name" value="Host" token="true" mutable="false" />
+	</DataModel>
+
+	<DataModel name="ContentLengthHeader" ref="Header">
+		<String name="field-name" value="Content-Length" token="true" mutable="false" />
+		<String name="field-value" mutable="false" >
+		  <Relation type="size" of="body" />
+		</String>
+	</DataModel>
+	<DataModel name="ContentTypeHeader" ref="Header">
+		<String name="field-name" value="Content-Type" token="true" mutable="false" />
+		<Block name="field-value" mutable="false" >
+		  <!-- Content-Type: multipart/form-data; boundary=7UTznmYL_oHpTQ2CGTjiwL3j91G02txrg7   constraint="value.find(&quot;\x3b&quot;) == -1"-->
+		  <String name="first" mutable="false" />
+		  <Block name="list" >
+			<String name="delimS" mutable="false" value="; " token="true" />
+			<Choice name="listc"  minOccurs="0" maxOccurs="10" >
+			  <Block name="boundary" mutable="false" ref="Boundary" />
+			  <Block name="others" mutable="false" >
+				<String name="item" mutable="false" constraint="len(value) != 0" />
+			  </Block>
+			</Choice>
+		  </Block>
+		</Block>
+	</DataModel>
+	
+
+	<DataModel name="xSdkDateHeader" ref="Header">
+		<String name="field-name" value="X-Sdk-Date" token="true" mutable="false" />
+		<String name="field-value" mutable="false" >
+		  <Fixup class="ScriptFixup" >
+			<Param name="class" value="HTTP_Headers_Fixup.ChangeDate"/>
+			<Param name="ref" value="field-value"/>
+		  </Fixup>  
+		</String>
+	</DataModel>  
+  
+	<DataModel name="SetCookieHeader" ref="Header">
+		<String name="field-name" value="Set-Cookie" token="true" mutable="false" />
+		<Block name="field-value" mutable="false" >
+		  <!-- JSESSIONID=75CE6547DC43C4B720799A89329F2B83; Path=/GMW/; Secure; HttpOnly -->
+		<String name="cookievalue" mutable="false" />
+		<String value=";" token="true" mutable="false" />
+		<String name="other" constraint="not value.endswith(&quot;\x0d\x0a&quot;)" mutable="false" />
+		</Block>
+	</DataModel>
+	<DataModel name="CookieHeader" ref="Header">
+		<String name="field-name" value="Cookie" token="true" mutable="false" />
+		<String name="field-value" mutable="false" />
+	</DataModel>
+
+	
+	<DataModel name="Headers">
+		<Block name="header-array" minOccurs="0" maxOccurs="-1" mutable="false">
+		  <Choice name="header-array" mutable="false" >
+			<Block name="host-header" ref="HostHeader" mutable="false" />
+			<Block name="content-length" ref="ContentLengthHeader" mutable="false" />
+			<Block name="content-type" ref="ContentTypeHeader" mutable="false" />
+			<Block name="x-sdk-date" ref="xSdkDateHeader" mutable="false" /> 
+			<Block name="cookie" ref="CookieHeader" mutable="false" />
+			<Block name="setcookie" ref="SetCookieHeader" mutable="false" />
+			<Block name="misc-header" ref="Header" mutable="false" />
+		  </Choice>
+		</Block>
+    </DataModel>	
+	
+  <DataModel name="FileBody_header" >
+		<Block name="separateLine"  mutable="false">
+		  <String  mutable="false" />
+		  
+		  <!--<String name="separateMark"  mutable="false">
+			<Fixup class="CopyValue">
+			  <Param name="ref" value="boundary_value" />
+			</Fixup>
+		  </String> -->
+		  <Block ref="CRLF" mutable="false"/>
+		</Block>
+		<Choice name="header-array" minOccurs="1" maxOccurs="-1" >
+			<Block name="content-Disposition" ref="Content-Disposition"  mutable="false"/>
+			<!-- Content-Type -->
+			<Block name="Content-Type" mutable="false">
+				<String value="Content-Type" token="true" mutable="false"/>
+				<String value=": " token="true" mutable="false"/>
+				<String value="text/xml" mutable="false"/>  
+				<Block ref="CRLF" mutable="false"/>       
+			</Block>
+			<!-- Content-Transfer-Encoding -->
+			<!-- <Block name="Content-Transfer-Encoding">
+				<String value="Content-Transfer-Encoding" token="true" mutable="false"/>
+				<String value=": " token="true" mutable="false"/>
+				<String value="" mutable="false"/>  
+				<Block ref="CRLF" mutable="false"/>     
+			</Block> -->
+		</Choice>
+		<Block ref="CRLF" />
+  </DataModel>
+	
+  <DataModel name="SingleFileBody_header">
+    <Block name="file_header1" ref="FileBody_header" />
+	<Block name="File" ref="TxtFile"/>
+	<!-- <Block ref="CRLF" />  -->
+    <!--<Block name="file_header_end" ref="FileBody_header_end" />-->
+  </DataModel>
+  
+  <DataModel name="MultiFileBody_header">
+    <Block name="file_header1" ref="FileBody_header" />
+	<Block name="File" ref="TxtFile"/>
+	<!-- <Block ref="CRLF" /> -->
+	<Block name="file_header2" ref="FileBody_header" />		
+	
+    <Choice minOccurs="0" maxOccurs="-1">
+     <Block name="file_header" ref="FileBody_header" />
+ 	  <Block name="arg">
+		<String name="other" constraint="not value.startswith(&quot;--&quot;)" mutable="false"/>
+		<Block ref="CRLF" />
+	  </Block>
+	</Choice>
+    <!--<Block name="file_header_end" ref="FileBody_header_end" />	-->
+  </DataModel>		
+	
+	<DataModel name="FileBody" >
+		<Choice name="cFileBody_header">
+			<Block name="multiFileBody_header" ref="MultiFileBody_header"/>
+			<Block name="singleFileBody_header" ref="SingleFileBody_header"/>
+		</Choice>
+    </DataModel>
+	
+	
+
+	<DataModel name="Post_Txt" >
+		<Block name="request-line" ref="RequestLine" mutable="false" >
+		   <String name="method.method" value="POST" token="true" mutable="false"/>	
+		</Block>
+		<Block name="request-line-crlf" ref="CRLF" mutable="false" />
+		<Block name="headers" ref="Headers" mutable="false" />
+		<Block name="header-crlf" ref="CRLF" mutable="false" />
+		<Block name="body" ref="FileBody" />
+    </DataModel> 
+
+    <!--<DataModel name="Request_login">
+		<Block name="HTTP_Request_FirstLine_ref" mutable="false" ref="HTTP_Request_FirstLine"/>
+		<Block name="HTTP_Head_Para_ref" mutable="false" ref="HTTP_Headers"/>
+		<String name="crlf" value="\r\n" mutable="false" token="true"/>
+        <Blob name="body"/>
+	</DataModel> -->
+    
+    <DataModel name="Response_base">
+
+		<Block name="HTTP_Response_FirstLine_ref" ref="HTTP_Response_FirstLine"/>
+		<Block name="HTTP_Response_Head_Para_ref" ref="HTTP_Headers_res"/>
+		<String name="crlf" value="\r\n" mutable="false" token="true"/>
+		<Block name="httpBody_Block">
+			<Blob name="payload"/>
+		</Block>
+
+	</DataModel>
+    
+    <DataModel name="Response">
+
+		<Choice >
+            <Block name="base" ref="Response_base"/>
+            <Block name="other" >
+                <Block name="HTTP_Response_FirstLine_ref" ref="HTTP_Response_FirstLine"/>
+                <String name="payload" type="utf8"/>
+            </Block>
+        </Choice>
+
+	</DataModel>
+    
+	
+
+
+</Peach>
