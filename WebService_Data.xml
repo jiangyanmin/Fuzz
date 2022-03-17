@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Peach>
+
+    <DataModel name="HttpUrlDataModel">
+        <String name="Url" mutable="false">
+            <!-- <Analyzer class="StringToken">
+                <Param name="Tokens" value="/?=&amp;&quot;"/>
+            </Analyzer> -->
+        </String>
+    </DataModel>
+
+    <DataModel name="HttpRequestFirstLine">
+        <!-- 该数据模型定义的是：Http请求报文的第一行 -->
+        <!-- POST /rest/fastlogin/v1.0?appkey=4d2c042e3ea7a31e21005d62&username=13641408987&format=json&type=2 Http/1.1 -->
+        <String name="Method" mutable="false"/>
+        <String name="Space" value=" " mutable="false" token="true"/>
+        <Block name="HttpUrl" mutable="false" ref="HttpUrlDataModel"/>
+        <String name="Version" value=" HTTP/1.1" mutable="false" token="true"/>
+        <String name="Crlf" value="\r\n" mutable="false" token="true"/>
+    </DataModel>
+
+    <DataModel name="HttpResponseFirstLine">
+        <!-- 该数据模型定义的是：Http响应报文的第一行 -->
+        <!-- Http/1.1 200 OK. -->
+<!--        <Choice>-->
+<!--            <Block name="Ok200">-->
+<!--                <String name="Version" value="Http/1.1 " length="9" mutable="false" token="true"/>-->
+<!--                <String name="RespCode" length="3"/>-->
+<!--                <String name="Space" value=" " mutable="false" token="true"/>-->
+<!--                <String name="RespStr" mutable="false"/>-->
+<!--                <String name="Crlf" value="\r\n" mutable="false" token="true"/>-->
+<!--            </Block>-->
+<!--            <Block name="Other">-->
+<!--                <String name="SomeString"/>-->
+<!--                <String name="Space" value=" " mutable="false" token="true"/>-->
+<!--                <String name="RespStr" mutable="false"/>-->
+<!--                <String name="Crlf" value="\r\n" mutable="false" token="true"/>-->
+<!--            </Block>-->
+<!--        </Choice>-->
+        <Choice name="VersionChoice">
+            <String name="Version0" value="http/1.1 " length="9" mutable="false" token="true"/>
+            <String name="Version1" value="Http/1.1 " length="9" mutable="false" token="true"/>
+            <String name="Version2" value="HTTP/1.1 " length="9" mutable="false" token="true"/>
+            <String name="Version3" value="http/1.0 " length="9" mutable="false" token="true"/>
+            <String name="Version4" value="Http/1.0 " length="9" mutable="false" token="true"/>
+            <String name="Version5" value="HTTP/1.0 " length="9" mutable="false" token="true"/>
+        </Choice>
+        <String name="RespCode" length="3" />
+        <String name="Space" value=" " mutable="false" token="true"/>
+        <String name="RespStr" mutable="false"/>
+        <String name="Crlf" value="\r\n" mutable="false" token="true"/>
+    </DataModel>
+
+    <DataModel name="HeadParaFlagStr">
+        <String name="ColonSpace" mutable="false" value=":" token="true"/>
+        <Block name="Spaces" mutable="false" minOccurs="0" maxOccurs="1">
+            <String name="Space" mutable="false" value=" " token="true"/>
+        </Block>
+    </DataModel>
+
+    <DataModel name="HeadLineBase">
+        <String name="HeadParaName" mutable="false" token="true"
+                constraint="not value.startswith(&quot;\x0d\x0a&quot;)"/>
+        <Block name="HeadParaFlag" mutable="false" ref="HeadParaFlagStr"/>
+        <String name="HeadParaValue" mutable="false"/>
+    </DataModel>
+
+    <DataModel name="HttpHeaderHost">
+        <!--Host不能继承HeadLineBase, 因为hostvalue 名称在state中需要引用-->
+        <String name="HeadParaName" mutable="false"
+                constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'host'"/>
+        <Block name="HeadParaFlag" mutable="false" ref="HeadParaFlagStr"/>
+        <String name="HostValue" mutable="false"/>
+    </DataModel>
+
+
+    <DataModel name="HttpHeaderContentLength" ref="HeadLineBase">
+        <String name="HeadParaName" mutable="false"
+                constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'content-length'"/>
+        <String name="HeadParaValue" mutable="false">
+            <Relation type="size" of="Body"/>
+        </String>
+    </DataModel>
+
+    <!-- add new http Head para-->
+
+    <DataModel name="HttpHeaderOtherPara" ref="HeadLineBase">
+        <String name="HeadParaName" mutable="false" constraint="not value.startswith(&quot;\x0d\x0a&quot;)"/>
+    </DataModel>
+
+    <DataModel name="Cookie">
+        <String name="HeadParaName" mutable="false"
+                constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'cookie'"/>
+        <Block name="HeadParaFlag" mutable="false" ref="HeadParaFlagStr"/>
+        <String name="CookieValue" mutable="false"/>
+    </DataModel>
+
+    <DataModel name="HeaderModify1">
+        <String name="HeadParaName" mutable="false"
+                constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'set-cookie'"/>
+        <Block name="HeadParaFlag" mutable="false" ref="HeadParaFlagStr"/>
+        <String name="Modify1" mutable="false"/>
+    </DataModel>
+
+    <DataModel name="HeaderModify2">
+        <String name="HeadParaName" mutable="false"
+                constraint="not value.startswith(&quot;\x0d\x0a&quot;) and value.lower() == 'waitchange2'"/>
+        <Block name="HeadParaFlag" mutable="false" ref="HeadParaFlagStr"/>
+        <String name="Modify2" mutable="false"/>
+    </DataModel>
+
+    <DataModel name="HttpHeaders">
+        <Block name="HeaderArray" mutable="false" minOccurs="1" maxOccurs="-1">
+            <Choice name="HeaderChoice" mutable="false">
+
+                <Block name="HeaderContentLength" mutable="false" ref="HttpHeaderContentLength"/>
+                <Block name="HeaderModify1" mutable="false" ref="HeaderModify1"/>
+                <Block name="HeaderModify2" mutable="false" ref="HeaderModify2"/>
+                <Block name="HeaderCookie" mutable="false" ref="Cookie"/>
+                <Block name="HeaderHost" mutable="false" ref="HttpHeaderHost"/>
+                <Block name="HeaderOtherPara" mutable="false" ref="HttpHeaderOtherPara"/>
+            </Choice>
+            <String name="Crlf" value="\r\n" mutable="false" token="true"/>
+        </Block>
+    </DataModel>
+
+    <DataModel name="HttpHeadersRes">
+        <Block name="HeaderArray" mutable="false" minOccurs="1" maxOccurs="-1">
+            <Choice name="HeaderChoice" mutable="false">
+                <Block name="HeaderModify1" mutable="false" ref="HeaderModify1"/>
+                <Block name="HeaderModify2" mutable="false" ref="HeaderModify2"/>
+
+                <Block name="HeaderOtherPara" mutable="false" ref="HttpHeaderOtherPara"/>
+            </Choice>
+            <String name="Crlf" value="\r\n" mutable="false" token="true"/>
+        </Block>
+    </DataModel>
+
+    <DataModel name="AllDataModel">
+        <String name="Body">
+            <Analyzer class="Json"/>
+        </String>
+    </DataModel>
+
+
+    <DataModel name="NullDataModel">
+        <Blob name="HttpBodyBlock" value="" length="0" mutable="false"/>
+    </DataModel>
+
+    <DataModel name="Request">
+        <Block name="HttpRequestFirstLineRef" mutable="false" ref="HttpRequestFirstLine"/>
+        <Block name="HttpHeadParaRef" mutable="false" ref="HttpHeaders"/>
+        <String name="Crlf" value="\r\n" mutable="false" token="true"/>
+        <Choice name="Body">
+            <Block name="AllDataModel" ref="AllDataModel"/>
+            <Block name="NullDataModel" ref="NullDataModel"/>
+        </Choice>
+    </DataModel>
+
+    <DataModel name="RequestLogin">
+        <Block name="HttpRequestFirstLineRef" mutable="false" ref="HttpRequestFirstLine"/>
+        <Block name="HttpHeadParaRef" mutable="false" ref="HttpHeaders"/>
+        <String name="Crlf" value="\r\n" mutable="false" token="true"/>
+        <Blob name="RealBody"/>
+    </DataModel>
+
+    <DataModel name="ResponseBase">
+
+        <Block name="HttpResponseFirstLineRef" ref="HttpResponseFirstLine"/>
+        <Block name="HttpResponseHeadParaRef" ref="HttpHeadersRes"/>
+        <String name="Crlf" value="\r\n" mutable="false" token="true"/>
+        <Block name="HttpBodyBlock">
+            <Blob name="Payload"/>
+        </Block>
+
+    </DataModel>
+
+    <DataModel name="Response">
+
+        <Choice>
+            <Block name="Base" ref="ResponseBase"/>
+            <Block name="Other">
+                <Block name="HttpResponseFirstLineRef" ref="HttpResponseFirstLine"/>
+                <String name="Payload" type="utf8"/>
+            </Block>
+        </Choice>
+
+    </DataModel>
+
+
+</Peach>

@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Peach xmlns="http://peachfuzzer.com/2012/Peach" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://peachfuzzer.com/2012/Peach peach.xsd" author="Peach Fuzzer, LLC" description="Transport Control Protocol version 4 PIT" version="1.0">
+  <Include ns="HTTP" src="file:##PitLibraryPath##/WebService_State.xml"/>
+  <Agent name="Local">
+    <Monitor class="Ssh">
+      <Param name="Host" value=""/>
+      <Param name="Port" value="22"/>
+      <Param name="Username" value=""/>
+      <Param name="Password" value=""/>
+      <Param name="Command" value="python java_monitor.py"/>
+      <Param name="CheckValue" value="fault ="/>
+      <Param name="When" value="OnIterationEnd"/>
+      <Param name="FaultOnMatch" value="true"/>
+    </Monitor>
+  </Agent>
+  <Test name="Default" maxOutputSize="100000">
+    <!--<Agent ref="Local"/>-->
+    <!--<Exclude xpath="//HttpHeadParaRef"/>-->
+    <!--<Exclude xpath="//HttpRequestFirstLineRef"/>-->
+    <Include xpath="//AllDataModel"/>
+    <StateModel ref="HTTP:RequestToServer"/>
+    <!-- ssl -->
+    <Publisher class="Ssl" name="ssl">
+      <Param name="Host" value="##TargetIPv4##"/>
+      <Param name="Port" value="##TargetPort##"/>
+      <Param name="ClientCert" value="##Clientcert##"/>
+      <Param name="ClientKey" value="##Clientkey##"/>
+      <Param name="Timeout" value="##Timeout##"/>
+    </Publisher>
+    <!-- tcp -->
+    <Publisher class="TcpClient" name="tcp">
+      <Param name="Host" value="##TargetIPv4##"/>
+      <Param name="Port" value="##TargetPort##"/>
+      <Param name="Timeout" value="##Timeout##"/>
+    </Publisher>
+    <Strategy class="##Strategy##">
+      <Param name="MaxFieldsToMutate" value="6"/>
+      <Param name="SwitchCount" value="100"/>
+    </Strategy>
+    <Logger class="File">
+      <Param name="Path" value="##LoggerPath##"/>
+    </Logger>
+    <Mutators mode="include"/>
+  </Test>
+</Peach>

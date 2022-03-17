@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Peach>
+  <Include ns="HTTP" src="file:##PitLibraryPath##/WebService_Data.xml"/>
+  <PythonPath path="##PitLibraryPath##/"/>
+  <Import import="WebService"/>
+  <StateModel name="RequestToServer" initialState="InitialState">
+    <State name="InitialState">
+      <Action name="actionRequest" type="output" publisher="##Publisher##">
+        <DataModel ref="HTTP:Request"/>
+        <Data fileName="##PitLibraryPath##/action"/>
+      </Action>
+      <Action name="actionResponse" type="input" publisher="##Publisher##">
+        <DataModel ref="HTTP:Response"/>
+      </Action>
+    </State>
+  </StateModel>
+</Peach>
